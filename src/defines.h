@@ -3,8 +3,8 @@
 
 // FILE: defines.h
 
-#define RIGHT_R_PWM_PIN 14
-#define RIGHT_L_PWM_PIN 13
+#define RIGHT_R_PWM_PIN 13
+#define RIGHT_L_PWM_PIN 14
 
 #define LEFT_R_PWM_PIN 32
 #define LEFT_L_PWM_PIN 33
@@ -28,10 +28,13 @@
 #define SPEED_VIRTUAL_PIN V7
 #define STREAM_VIRTUAL_PIN V8
 #define LAMP_VIRTUAL_PIN V9
+#define CAMERA_POWER_VIRTUAL_PIN V10
 
-#define FRONT_CAMERA_URL "http://192.168.100.31/"
-#define BACK_CAMERA_URL "http://192.168.100.36/"
+#define FRONT_CAMERA_URL "http://192.168.1.106/"
+#define BACK_CAMERA_URL "http://192.168.1.36/"
 
 #define LOADING_SPEED 50
+
+#define NAV_SPEED 50
 
 #endif // DEFINES_H

@@ -18,11 +18,11 @@
 
 #include "IBT2.h"
 #include "Relay.h"
+#include "soc/soc.h"          // Disable brownout problems
+#include "soc/rtc_cntl_reg.h" // Disable brownout problems
 
 unsigned long lastMillis = 0;
 int ContainerSpeed = 20;
-
-bool appResetDone = false;
 
 enum ContainerMode
 {
@@ -66,6 +66,8 @@ enum Command
   // LAMP
   LAMP_ON,
   LAMP_OFF,
+  CAMERA_ON,
+  CAMERA_OFF,
 
   // CONTAINER
   MODE_LOAD,
@@ -145,11 +147,30 @@ BLYNK_WRITE(LAMP_VIRTUAL_PIN)
   }
 }
 
+BLYNK_WRITE(CAMERA_POWER_VIRTUAL_PIN)
+{
+  int val = param.asInt();
+
+  if (val == 1)
+  {
+    command = CAMERA_ON;
+    camera.on();
+  }
+  else
+  {
+    command = CAMERA_OFF;
+    camera.off();
+  }
+}
+
 BLYNK_WRITE(MODE_VIRTUAL_PIN)
 {
   int val = param.asInt();
 
   container.stop();
+  containerEnabled = false;
+  lastContainerEnabled = false;
+
   Blynk.virtualWrite(DROP_VIRTUAL_PIN, 0);
 
   if (val == 1)
@@ -176,6 +197,10 @@ BLYNK_WRITE(SPEED_VIRTUAL_PIN)
   int val = param.asInt();
   ContainerSpeed = val;
   Serial.printf("DISPENSER SPEED: %d%%\n", ContainerSpeed);
+
+  container.stop();
+  containerEnabled = false;
+  lastContainerEnabled = false;
 }
 
 void handleNavigation(char _navCommand)
@@ -185,25 +210,36 @@ void handleNavigation(char _navCommand)
   case 'R':
     Serial.println("RIGHT");
     // right motor logic
+    right.backward(NAV_SPEED);
+    left.forward(NAV_SPEED);
+
     break;
 
   case 'L':
     Serial.println("LEFT");
+    right.forward(NAV_SPEED);
+    left.backward(NAV_SPEED);
     // left motor logic
     break;
 
   case 'F':
     Serial.println("FORWARD");
+    right.forward(NAV_SPEED);
+    left.forward(NAV_SPEED);
     // forward logic
     break;
 
   case 'B':
     Serial.println("BACKWARD");
+    right.backward(NAV_SPEED);
+    left.backward(NAV_SPEED);
     // backward logic
     break;
 
   case 'S':
     Serial.println("STOP");
+    right.stop();
+    left.stop();
     // stop motors
     break;
 
@@ -248,26 +284,21 @@ void handleContainer()
   lastContainerEnabled = containerEnabled;
 }
 
-void resetBlynkAppOnce()
+BLYNK_CONNECTED()
 {
-  if (appResetDone)
-    return;
-
-  Serial.println("RESETTING BLYNK APP");
-
   Blynk.virtualWrite(MODE_VIRTUAL_PIN, 0);
   Blynk.virtualWrite(DROP_VIRTUAL_PIN, 0);
   Blynk.virtualWrite(ACTIVE_CAMERA_VIRTUAL_PIN, 1);
   Blynk.virtualWrite(LAMP_VIRTUAL_PIN, 0);
   Blynk.virtualWrite(SPEED_VIRTUAL_PIN, 50);
-
-  appResetDone = true;
 }
 
 // ========================= SETUP =========================
 
 void setup()
 {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
+
   Serial.begin(115200);
   delay(100);
 
@@ -284,6 +315,7 @@ void setup()
   // RELAYS
   lamp.begin();
   camera.begin();
+  camera.on();
 }
 
 // ========================= LOOP =========================
@@ -291,11 +323,6 @@ void setup()
 void loop()
 {
   BlynkEdgent.run();
-
-  if (BlynkState::get() == MODE_RUNNING)
-  {
-    resetBlynkAppOnce();
-  }
 
   switch (command)
   {
