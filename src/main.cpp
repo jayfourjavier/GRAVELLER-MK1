@@ -23,6 +23,7 @@
 
 unsigned long lastMillis = 0;
 int ContainerSpeed = 20;
+int TravelSpeed = 20;
 
 enum ContainerMode
 {
@@ -203,6 +204,8 @@ BLYNK_WRITE(SPEED_VIRTUAL_PIN)
   lastContainerEnabled = false;
 }
 
+
+
 void handleNavigation(char _navCommand)
 {
   switch (_navCommand)
@@ -210,29 +213,29 @@ void handleNavigation(char _navCommand)
   case 'R':
     Serial.println("RIGHT");
     // right motor logic
-    right.backward(NAV_SPEED);
-    left.forward(NAV_SPEED);
+    right.backward(TravelSpeed);
+    left.forward(TravelSpeed);
 
     break;
 
   case 'L':
     Serial.println("LEFT");
-    right.forward(NAV_SPEED);
-    left.backward(NAV_SPEED);
+    right.forward(TravelSpeed);
+    left.backward(TravelSpeed);
     // left motor logic
     break;
 
   case 'F':
     Serial.println("FORWARD");
-    right.forward(NAV_SPEED);
-    left.forward(NAV_SPEED);
+    right.forward(TravelSpeed);
+    left.forward(TravelSpeed);
     // forward logic
     break;
 
   case 'B':
     Serial.println("BACKWARD");
-    right.backward(NAV_SPEED);
-    left.backward(NAV_SPEED);
+    right.backward(TravelSpeed);
+    left.backward(TravelSpeed);
     // backward logic
     break;
 
@@ -248,6 +251,16 @@ void handleNavigation(char _navCommand)
     break;
   }
 }
+
+BLYNK_WRITE(TRAVEL_SPEED_VIRTUAL_PIN)
+{
+  int val = param.asInt();
+  TravelSpeed = map(val, 0, 100, 0, 255);
+  Serial.printf("SPEED: %d%% PWM: %d\n", val, TravelSpeed);
+
+  handleNavigation('S');
+}
+
 
 void handleContainer()
 {
@@ -343,13 +356,12 @@ void loop()
   case FRONT_CAM:
     Serial.println("SWITCHED TO FRONT CAM");
     // FRONT CAMERA LOGIC HERE
-    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", BACK_CAMERA_URL);
+    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", FRONT_CAMERA_URL); // change BACK_CAMERA_URL TO FRONT_CAMERA_URL 5/8/2026
     break;
 
   case BACK_CAM:
     Serial.println("SWITCHED TO BACK CAM");
-    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", FRONT_CAMERA_URL);
-
+    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", BACK_CAMERA_URL); // change FRONT_CAMERA_URL TO BACK_CAMERA_URL 5/8/2026
     // BACK CAMERA LOGIC HERE
     break;
 

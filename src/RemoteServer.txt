@@ -1,0 +1,474 @@
+// RemoteServer.h
+#ifndef REMOTE_SERVER_H
+#define REMOTE_SERVER_H
+
+#include <WebServer.h>
+#include <ArduinoJson.h>
+#include <WiFi.h>
+
+// External command variable from your main sketch
+extern int command;
+
+// Command constants (match your existing enum)
+// MOVEMENT
+#define CMD_MOVE_RIGHT    1
+#define CMD_MOVE_LEFT     2
+#define CMD_MOVE_FORWARD  3
+#define CMD_MOVE_BACKWARD 4
+#define CMD_STOP          5
+
+// CAMERA
+#define CMD_FRONT_CAM     6
+#define CMD_BACK_CAM      7
+
+// LAMP
+#define CMD_LAMP_ON       8
+#define CMD_LAMP_OFF      9
+#define CMD_CAMERA_ON     10
+#define CMD_CAMERA_OFF    11
+
+// CONTAINER
+#define CMD_MODE_LOAD     12
+#define CMD_MODE_DROP     13
+#define CMD_CONTAINER_ON  14
+#define CMD_CONTAINER_OFF 15
+
+// Speed values
+extern int ContainerSpeed;
+
+class RemoteServer {
+private:
+    WebServer server;
+    
+public:
+    RemoteServer(int port = 80) : server(port) {}
+    
+    void begin() {
+        Serial.println("Starting Remote Server...");
+        
+        server.on("/", std::bind(&RemoteServer::handleRoot, this));
+        server.on("/cmd", std::bind(&RemoteServer::handleCommand, this));
+        server.on("/status", std::bind(&RemoteServer::handleStatus, this));
+        
+        server.begin();
+        Serial.println("Remote Server started on port 80");
+        Serial.print("Access at: http://");
+        Serial.println(WiFi.localIP());
+    }
+    
+    void run() {
+        server.handleClient();
+    }
+    
+    void handleRoot() {
+        String html = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GRAVELLER Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: Arial, sans-serif;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(30, 30, 46, 0.95);
+            border-radius: 28px;
+            overflow: hidden;
+        }
+        
+        .camera-section {
+            background: #000;
+            position: relative;
+            border-bottom: 3px solid #ff6b35;
+        }
+        
+        .camera-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: white;
+            z-index: 10;
+        }
+        
+        .stream-container {
+            width: 100%;
+            background: #000;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stream-placeholder {
+            color: #666;
+            text-align: center;
+        }
+        
+        .speed-section {
+            background: linear-gradient(135deg, #ff6b35 0%, #f09351 100%);
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .speed-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 16px;
+        }
+        
+        .status-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .status-label {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+        
+        .status-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .mode-val { color: #ff6b35; }
+        .camera-val { color: #4CAF50; }
+        .lamp-val { color: #FFC107; }
+        
+        .slider-section {
+            padding: 16px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #333;
+            border-radius: 3px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ff6b35;
+            cursor: pointer;
+        }
+        
+        .control-pad {
+            padding: 20px;
+        }
+        
+        .dpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+        
+        .ctrl-btn {
+            background: #2a2a3e;
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .ctrl-btn:active {
+            transform: scale(0.92);
+            background: #ff6b35;
+        }
+        
+        .ctrl-btn.drop {
+            background: #ff6b35;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 0 20px 20px 20px;
+        }
+        
+        .action-btn {
+            background: #2a2a3e;
+            border: none;
+            color: white;
+            padding: 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn.mode { background: #ff6b35; }
+        .action-btn.camera { background: #4CAF50; }
+        .action-btn.lamp { background: #FFC107; color: #1e1e2e; }
+        
+        .power-section {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .power-label { color: #aaa; font-size: 13px; }
+        
+        .power-btn {
+            background: #2a2a3e;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .power-btn.on { background: #4CAF50; color: white; }
+        .power-btn.off { background: #f44336; color: white; }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: #00ff88;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="camera-section">
+            <span class="camera-badge">📹 GRAVELLER</span>
+            <div class="stream-container">
+                <div class="stream-placeholder">📷 Camera Stream<br><span style="font-size:11px;">Use Blynk app for video</span></div>
+            </div>
+        </div>
+        
+        <div class="speed-section">
+            <div class="speed-value"><span id="droppingSpeed">0</span>%</div>
+            <div style="font-size:11px;">DROPPING SPEED</div>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-card"><div class="status-label">MODE</div><div class="status-value mode-val" id="modeStatus">DROP</div></div>
+            <div class="status-card"><div class="status-label">CAMERA</div><div class="status-value camera-val" id="cameraStatus">FRONT</div></div>
+            <div class="status-card"><div class="status-label">LAMP</div><div class="status-value lamp-val" id="lampStatus">OFF</div></div>
+        </div>
+        
+        <div class="slider-section">
+            <input type="range" id="speedSlider" min="0" max="100" value="50">
+        </div>
+        
+        <div class="control-pad">
+            <div class="dpad-grid">
+                <div></div>
+                <button class="ctrl-btn" data-cmd="forward">▲<br><span style="font-size:10px;">FWD</span></button>
+                <div></div>
+                <button class="ctrl-btn" data-cmd="left">◄<br><span style="font-size:10px;">LEFT</span></button>
+                <button class="ctrl-btn drop" data-cmd="drop">▼<br><span style="font-size:10px;">DROP</span></button>
+                <button class="ctrl-btn" data-cmd="right">►<br><span style="font-size:10px;">RIGHT</span></button>
+                <div></div>
+                <button class="ctrl-btn" data-cmd="backward">▼▼<br><span style="font-size:10px;">BACK</span></button>
+                <div></div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="action-btn mode" id="modeBtn">🔄 MODE</button>
+            <button class="action-btn camera" id="cameraBtn">📷 CAMERA</button>
+            <button class="action-btn lamp" id="lampBtn">💡 LAMP</button>
+        </div>
+        
+        <div class="power-section">
+            <div class="power-label">🔋 CAMERA POWER</div>
+            <div class="power-toggle">
+                <button class="power-btn on" data-power="on">ON</button>
+                <button class="power-btn off" data-power="off">OFF</button>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast">Command sent</div>
+    
+    <script>
+        async function sendCmd(cmd, val) {
+            let url = '/cmd?action=' + cmd;
+            if(val) url += '&value=' + val;
+            try {
+                let resp = await fetch(url);
+                let data = await resp.json();
+                document.getElementById('toast').classList.add('show');
+                setTimeout(() => document.getElementById('toast').classList.remove('show'), 1500);
+                if(data.speed) document.getElementById('droppingSpeed').innerText = data.speed;
+                if(data.mode) document.getElementById('modeStatus').innerText = data.mode;
+                if(data.camera) document.getElementById('cameraStatus').innerText = data.camera;
+                if(data.lamp) document.getElementById('lampStatus').innerText = data.lamp;
+            } catch(e) { console.log(e); }
+        }
+        
+        document.querySelectorAll('.ctrl-btn[data-cmd]').forEach(btn => {
+            btn.onclick = () => sendCmd(btn.dataset.cmd);
+        });
+        
+        document.getElementById('modeBtn').onclick = () => sendCmd('mode');
+        document.getElementById('cameraBtn').onclick = () => sendCmd('camera');
+        document.getElementById('lampBtn').onclick = () => sendCmd('lamp');
+        
+        document.querySelectorAll('[data-power]').forEach(btn => {
+            btn.onclick = () => sendCmd('camerapower', btn.dataset.power);
+        });
+        
+        document.getElementById('speedSlider').onchange = (e) => sendCmd('speed', e.target.value);
+        
+        async function fetchStatus() {
+            try {
+                let resp = await fetch('/status');
+                let data = await resp.json();
+                if(data.speed) document.getElementById('droppingSpeed').innerText = data.speed;
+                if(data.mode) document.getElementById('modeStatus').innerText = data.mode;
+                if(data.camera) document.getElementById('cameraStatus').innerText = data.camera;
+                if(data.lamp) document.getElementById('lampStatus').innerText = data.lamp;
+                if(data.speed) document.getElementById('speedSlider').value = data.speed;
+            } catch(e) {}
+        }
+        
+        fetchStatus();
+        setInterval(fetchStatus, 2000);
+    </script>
+</body>
+</html>
+        )rawliteral";
+        server.send(200, "text/html", html);
+    }
+    
+    void handleCommand() {
+        String action = server.arg("action");
+        String value = server.arg("value");
+        
+        // ONLY update the command variable - let main loop handle everything
+        if (action == "forward") {
+            Serial.println("WEB: FORWARD");
+            command = CMD_MOVE_FORWARD;
+        }
+        else if (action == "backward") {
+            Serial.println("WEB: BACKWARD");
+            command = CMD_MOVE_BACKWARD;
+        }
+        else if (action == "left") {
+            Serial.println("WEB: LEFT");
+            command = CMD_MOVE_LEFT;
+        }
+        else if (action == "right") {
+            Serial.println("WEB: RIGHT");
+            command = CMD_MOVE_RIGHT;
+        }
+        else if (action == "drop") {
+            Serial.println("WEB: DROP");
+            command = CMD_CONTAINER_ON;
+        }
+        else if (action == "mode") {
+            Serial.println("WEB: MODE TOGGLE");
+            command = CMD_MODE_DROP;  // Will toggle in main loop
+        }
+        else if (action == "camera") {
+            Serial.println("WEB: CAMERA TOGGLE");
+            command = CMD_FRONT_CAM;  // Will toggle in main loop
+        }
+        else if (action == "lamp") {
+            Serial.println("WEB: LAMP TOGGLE");
+            command = CMD_LAMP_ON;  // Will toggle in main loop
+        }
+        else if (action == "camerapower") {
+            if (value == "on") {
+                Serial.println("WEB: CAMERA ON");
+                command = CMD_CAMERA_ON;
+            } else {
+                Serial.println("WEB: CAMERA OFF");
+                command = CMD_CAMERA_OFF;
+            }
+        }
+        else if (action == "speed") {
+            ContainerSpeed = value.toInt();
+            Serial.printf("WEB: SPEED SET TO %d%%\n", ContainerSpeed);
+        }
+        
+        // Send current status back
+        JsonDocument doc;
+        doc["speed"] = ContainerSpeed;
+        doc["mode"] = (containerMode == 0) ? "DROP" : "LOAD";  // Assuming 0=DROP, 1=LOAD
+        doc["camera"] = (command == CMD_FRONT_CAM) ? "FRONT" : "BACK";
+        doc["lamp"] = "OFF";  // Will be updated by main loop
+        
+        String response;
+        serializeJson(doc, response);
+        server.send(200, "application/json", response);
+        
+        // Reset command after a short delay for movement commands
+        if (action == "forward" || action == "backward" || action == "left" || action == "right") {
+            delay(300);
+            command = CMD_STOP;
+        } else if (action == "drop") {
+            delay(500);
+            command = CMD_CONTAINER_OFF;
+        }
+    }
+    
+    void handleStatus() {
+        JsonDocument doc;
+        doc["speed"] = ContainerSpeed;
+        doc["mode"] = (containerMode == 0) ? "DROP" : "LOAD";
+        doc["camera"] = (command == CMD_FRONT_CAM) ? "FRONT" : "BACK";
+        doc["lamp"] = "OFF";
+        
+        String response;
+        serializeJson(doc, response);
+        server.send(200, "application/json", response);
+    }
+};
+
+#endif
