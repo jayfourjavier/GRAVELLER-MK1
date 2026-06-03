@@ -18,7 +18,7 @@ void IRAM_ATTR irTriggered()
     isEmpty = false;
 }
 
-inline void setupIR()
+inline void setupIr()
 {
     pinMode(IR_1_PIN, INPUT_PULLUP);
     pinMode(IR_2_PIN, INPUT_PULLUP);
@@ -38,7 +38,7 @@ inline void setupIR()
     );
 }
 
-inline void updateIR()
+inline void updateIr()
 {
     if (millis() - lastDropMillis > IS_EMPTY_THRESHOLD_MILLIS)
     {
