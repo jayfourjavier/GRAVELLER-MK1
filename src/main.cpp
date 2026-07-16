@@ -345,12 +345,12 @@ void loop()
   case FRONT_CAM:
     Serial.println("SWITCHED TO FRONT CAM");
     // FRONT CAMERA LOGIC HERE
-    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", BACK_CAMERA_URL);
+    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", FRONT_CAMERA_URL);
     break;
 
   case BACK_CAM:
     Serial.println("SWITCHED TO BACK CAM");
-    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", FRONT_CAMERA_URL);
+    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", BACK_CAMERA_URL);
 
     // BACK CAMERA LOGIC HERE
     break;

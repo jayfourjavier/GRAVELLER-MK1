@@ -43,7 +43,7 @@
 // ===================== BLYNK VIRTUAL PINS =====================
 
 /** @brief Active camera selector */
-#define ACTIVE_CAMERA_VIRTUAL_PIN V0
+#define ACTIVE_CAMERA_VIRTUAL_PIN V0                        
 /** @brief Forward movement control */
 #define FORWARD_VIRTUAL_PIN V1
 /** @brief Backward movement control */
@@ -64,13 +64,14 @@
 #define LAMP_VIRTUAL_PIN V9
 /** @brief Camera power control */
 #define CAMERA_POWER_VIRTUAL_PIN V10
+#define TRAVEL_SPEED_VIRTUAL_PIN V11
 
 // ===================== CAMERA STREAM URLs =====================
 
 /** @brief Front camera stream URL */
-#define FRONT_CAMERA_URL "http://192.168.1.106/"
+#define FRONT_CAMERA_URL "http://192.168.1.50/"
 /** @brief Back camera stream URL */
-#define BACK_CAMERA_URL "http://192.168.1.36/"
+#define BACK_CAMERA_URL "http://192.168.1.200/"
 
 // ===================== SYSTEM CONFIG =====================
 

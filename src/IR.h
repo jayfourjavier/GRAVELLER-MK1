@@ -16,7 +16,6 @@ void IRAM_ATTR irTriggered()
 {
     lastDropMillis = millis();
     isEmpty = false;
-    Serial.println("GRAVEL DROP DETECTED");
 }
 
 inline void setupIr()
@@ -44,6 +43,6 @@ inline void updateIr()
     if (millis() - lastDropMillis > IS_EMPTY_THRESHOLD_MILLIS)
     {
         isEmpty = true;
-        Serial.println("EMPTY GRAVEL");
+        //Serial.println("EMPTY GRAVEL");
     }
 }
