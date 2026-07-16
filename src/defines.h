@@ -43,7 +43,7 @@
 // ===================== BLYNK VIRTUAL PINS =====================
 
 /** @brief Active camera selector */
-#define ACTIVE_CAMERA_VIRTUAL_PIN V0
+#define ACTIVE_CAMERA_VIRTUAL_PIN V0                        
 /** @brief Forward movement control */
 #define FORWARD_VIRTUAL_PIN V1
 /** @brief Backward movement control */

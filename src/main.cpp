@@ -18,6 +18,7 @@
 
 #include "IBT2.h"
 #include "Relay.h"
+#include "IR.h"
 #include "soc/soc.h"          // Disable brownout problems
 #include "soc/rtc_cntl_reg.h" // Disable brownout problems
 
@@ -329,6 +330,7 @@ void setup()
   lamp.begin();
   camera.begin();
   camera.on();
+  setupIr();
 }
 
 // ========================= LOOP =========================
@@ -336,7 +338,7 @@ void setup()
 void loop()
 {
   BlynkEdgent.run();
-
+  updateIr();
   switch (command)
   {
     // ================= LAMP =================
@@ -356,12 +358,13 @@ void loop()
   case FRONT_CAM:
     Serial.println("SWITCHED TO FRONT CAM");
     // FRONT CAMERA LOGIC HERE
-    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", FRONT_CAMERA_URL); // change BACK_CAMERA_URL TO FRONT_CAMERA_URL 5/8/2026
+    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", FRONT_CAMERA_URL);
     break;
 
   case BACK_CAM:
     Serial.println("SWITCHED TO BACK CAM");
-    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", BACK_CAMERA_URL); // change FRONT_CAMERA_URL TO BACK_CAMERA_URL 5/8/2026
+    Blynk.setProperty(STREAM_VIRTUAL_PIN, "url", BACK_CAMERA_URL);
+
     // BACK CAMERA LOGIC HERE
     break;
 
