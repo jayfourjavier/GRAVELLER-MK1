@@ -13,8 +13,11 @@
 #define USE_ESP32_DEV_MODULE
 
 #include <Arduino.h>
+#include <Adafruit_INA228.h>
+
 #include "BlynkEdgent.h"
 #include "defines.h"
+#include "INA228.h"
 
 #include "IBT2.h"
 #include "Relay.h"
@@ -50,10 +53,10 @@ Relay camera(CAMERA_RELAY_PIN, "CAMERA", true);
 
 // ========================= COMMAND ENUM =========================
 
+
 enum Command
 {
   NONE,
-
   // MOVEMENT
   MOVE_RIGHT,
   MOVE_LEFT,
@@ -331,6 +334,7 @@ void setup()
   camera.begin();
   camera.on();
   setupIr();
+  setupIna228 ();
 }
 
 // ========================= LOOP =========================
@@ -339,6 +343,7 @@ void loop()
 {
   BlynkEdgent.run();
   updateIr();
+  ina228Loop();
   switch (command)
   {
     // ================= LAMP =================

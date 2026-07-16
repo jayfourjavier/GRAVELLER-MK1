@@ -65,6 +65,7 @@
 /** @brief Camera power control */
 #define CAMERA_POWER_VIRTUAL_PIN V10
 #define TRAVEL_SPEED_VIRTUAL_PIN V11
+#define BATTERY_LEVEL_VIRTUAL_PIN V13
 
 // ===================== CAMERA STREAM URLs =====================
 
