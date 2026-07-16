@@ -69,7 +69,7 @@
 // ===================== CAMERA STREAM URLs =====================
 
 /** @brief Front camera stream URL */
-#define FRONT_CAMERA_URL "http://192.168.1.50/"
+#define FRONT_CAMERA_URL "http://192.168.50/"
 /** @brief Back camera stream URL */
 #define BACK_CAMERA_URL "http://192.168.1.200/"
 
