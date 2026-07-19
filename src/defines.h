@@ -65,12 +65,13 @@
 /** @brief Camera power control */
 #define CAMERA_POWER_VIRTUAL_PIN V10
 #define TRAVEL_SPEED_VIRTUAL_PIN V11
+#define IS_EMPTY_VIRTUAL_PIN V12
 #define BATTERY_LEVEL_VIRTUAL_PIN V13
 
 // ===================== CAMERA STREAM URLs =====================
 
 /** @brief Front camera stream URL */
-#define FRONT_CAMERA_URL "http://192.168.50/"
+#define FRONT_CAMERA_URL "http://192.168.1.50/"
 /** @brief Back camera stream URL */
 #define BACK_CAMERA_URL "http://192.168.1.200/"
 

@@ -1,4 +1,3 @@
-
 // IR.h
 
 #pragma once
@@ -7,10 +6,11 @@
 
 #define IR_1_PIN 18
 #define IR_2_PIN 19
-#define IS_EMPTY_THRESHOLD_MILLIS 60000UL
+#define IS_EMPTY_THRESHOLD_MILLIS 10000UL
 
 volatile unsigned long lastDropMillis = 0;
 volatile bool isEmpty = true;
+volatile bool isEmptyPrev = true;
 
 void IRAM_ATTR irTriggered()
 {
@@ -40,9 +40,19 @@ inline void setupIr()
 
 inline void updateIr()
 {
+    // Become EMPTY after timeout
     if (millis() - lastDropMillis > IS_EMPTY_THRESHOLD_MILLIS)
     {
         isEmpty = true;
-        //Serial.println("EMPTY GRAVEL");
+    }
+
+    // Only execute when state changes
+    if (isEmpty != isEmptyPrev)
+    {
+        isEmptyPrev = isEmpty;
+
+        Serial.printf("IR: %s\n", isEmpty ? "EMPTY" : "NOT EMPTY");
+
+        Blynk.virtualWrite(IS_EMPTY_VIRTUAL_PIN, isEmpty ? 1 : 0);
     }
 }

@@ -60,12 +60,12 @@ void ina228Loop() {
   int batteryLevelRounded = (batteryLevel / 5) * 5;
 
   // Print for debugging
-  Serial.print("Bus Voltage: ");
-  Serial.print(voltage, 3);
-  Serial.print(" V  |  SOC: ");
-  Serial.print(batteryLevel);
-  Serial.print("%  |  Blynk: ");
-  Serial.println(batteryLevelRounded);
+  // Serial.print("Bus Voltage: ");
+  // Serial.print(voltage, 3);
+  // Serial.print(" V  |  SOC: ");
+  // Serial.print(batteryLevel);
+  // Serial.print("%  |  Blynk: ");
+  // Serial.println(batteryLevelRounded);
 
   // Send to Blynk
   Blynk.virtualWrite(BATTERY_LEVEL_VIRTUAL_PIN, batteryLevelRounded);
