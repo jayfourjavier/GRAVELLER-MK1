@@ -341,6 +341,9 @@ void setup()
 
 void loop()
 {
+testIr();
+delay(1000);
+return;
   BlynkEdgent.run();
   updateIr();
   ina228Loop();
