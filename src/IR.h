@@ -56,3 +56,7 @@ inline void updateIr()
         Blynk.virtualWrite(IS_EMPTY_VIRTUAL_PIN, isEmpty ? 1 : 0);
     }
 }
+
+inline void testIr() {
+    Serial.printf("IR 1: %d\t| IR 2: %d\n", digitalRead(IR_1_PIN), digitalRead(IR_2_PIN));
+}
